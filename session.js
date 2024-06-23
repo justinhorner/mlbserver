@@ -2800,7 +2800,7 @@ class sessionClass {
         let logo_type = this.data.use_png_logos ? 'png' : 'svg'
         for (const [key, value] of Object.entries(channels)) {
           let logo = this.data.use_png_logos ? value.logo.replace('image.svg', 'image.png') : value.logo;
-          body += '#EXTINF:-1 CUID="' + key + '" channelID="' + key + '" tvg-num="1.' + channelnumber + '" tvg-chno="1.' + channelnumber + '" tvg-id="' + key + '" tvg-name="' + key + '" tvg-logo="' + logo + '" group-title="' + value.mediatype + '",' + key + "\n"
+          body += '#EXTINF:-1 CUID="' + key + '" channelID="' + key + '" catchup="default" tvg-num="1.' + channelnumber + '" tvg-chno="1.' + channelnumber + '" tvg-id="' + key + '" tvg-name="' + key + '" tvg-logo="' + logo + '" group-title="' + value.mediatype + '",' + key + "\n"
           body += value.stream + "\n"
           channelnumber++
         }

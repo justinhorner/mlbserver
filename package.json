@@ -1,13 +1,14 @@
 {
   "name": "mlbserver",
-  "version": "2024.06.12",
+  "version": "2024.06.23",
   "description": "",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tonywagner/mlbserver.git"
+    "url": "git+https://github.com/justinhorner/mlbserver.git"
   },
   "dependencies": {
-    "ffmpeg-static": "^4.4.0",
+    "btoa": "^1.2.1",
+    "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.2",
     "hls-server": "^1.5.0",
     "http": "0.0.1-security",
@@ -17,14 +18,15 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "root": "^3.2.0",
+    "svg2img": "^1.0.0-beta.2",
     "tough-cookie-filestore": "^0.0.1",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.6.2"
   },
   "bin": {
     "mlbserver": "index.js"
   },
   "bugs": {
-    "url": "https://github.com/tonywagner/mlbserver/issues"
+    "url": "https://github.com/justinhorner/mlbserver/issues"
   },
-  "homepage": "https://github.com/tonywagner/mlbserver#readme"
+  "homepage": "https://github.com/justinhorner/mlbserver#readme"
 }

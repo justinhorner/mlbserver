@@ -8,6 +8,8 @@ const path = require('path')
 const readlineSync = require('readline-sync')
 const FileCookieStore = require('tough-cookie-filestore')
 const parseString = require('xml2js').parseString
+const svg2img = require('svg2img');
+const btoa = require('btoa');
 
 const MULTIVIEW_DIRECTORY_NAME = 'multiview'
 
@@ -924,6 +926,9 @@ class sessionClass {
     if ( !this.data.scan_mode ) {
       this.setScanMode('on')
     }
+    if ( !this.data.use_png_logos ) {
+      this.setUsePngLogos('on')
+    }
     if ( !this.data.linkType ) {
       this.setLinkType('embed')
     }
@@ -1019,6 +1024,12 @@ class sessionClass {
   setScanMode(x) {
     this.log('scan_mode set to ' + x)
     this.data.scan_mode = x
+    this.save_session_data()
+  }
+
+  setUsePngLogos(x) {
+    this.log('usePngLogos set to ' + x)
+    this.data.use_png_logos = x
     this.save_session_data()
   }
 
@@ -2786,8 +2797,10 @@ class sessionClass {
       // output M3U channel data, if requested
       if ( dataType == 'channels' ) {
         let channelnumber = startingChannelNumber
+        let logo_type = this.data.use_png_logos ? 'png' : 'svg'
         for (const [key, value] of Object.entries(channels)) {
-          body += '#EXTINF:-1 CUID="' + key + '" channelID="' + key + '" tvg-num="1.' + channelnumber + '" tvg-chno="1.' + channelnumber + '" tvg-id="' + key + '" tvg-name="' + key + '" tvg-logo="' + value.logo + '" group-title="' + value.mediatype + '",' + key + "\n"
+          let logo = this.data.use_png_logos ? value.logo.replace('image.svg', 'image.png') : value.logo;
+          body += '#EXTINF:-1 CUID="' + key + '" channelID="' + key + '" tvg-num="1.' + channelnumber + '" tvg-chno="1.' + channelnumber + '" tvg-id="' + key + '" tvg-name="' + key + '" tvg-logo="' + logo + '" group-title="' + value.mediatype + '",' + key + "\n"
           body += value.stream + "\n"
           channelnumber++
         }
@@ -2838,6 +2851,34 @@ class sessionClass {
       } else {
         this.debuglog('failed to get image for ' + teamId)
       }
+    }
+  }
+
+  async getImagePng(teamId) {
+    this.debuglog('getImagePng ' + teamId)
+    let imagePath = path.join(this.CACHE_DIRECTORY, teamId + '.png')
+
+    if ( fs.existsSync(imagePath) ) {
+      this.debuglog('using cached image for ' + teamId)
+      return fs.readFileSync(imagePath);
+    } else {
+      let svgString = await this.getImage(teamId);
+
+      if (svgString == null) {
+        svgString = fs.readFileSync(imagePath.replace('.png', '.svg'))
+      }
+      if (!svgString) {
+        this.log(`No svg string for team ${teamId}`)
+      }
+
+      //2. Convert from svg's base64 string
+      svg2img(
+        'data:image/svg+xml;base64,' + btoa(svgString),
+        function(error, buffer) {
+            fs.writeFileSync(imagePath, buffer);
+      });
+
+      return fs.readFileSync(imagePath);
     }
   }
 

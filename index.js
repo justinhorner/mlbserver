@@ -41,6 +41,7 @@ const VALID_SKIP = [ 'off', 'breaks', 'idle time', 'pitches', 'commercials' ]
 const VALID_PAD = [ 'off', 'on' ]
 const VALID_FORCE_VOD = [ 'off', 'on' ]
 const VALID_SCAN_MODES = [ 'off', 'on' ]
+const VALID_USE_PNG_LOGOS_MODES = [ 'off', 'on' ]
 
 const SAMPLE_STREAM_URL = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
 
@@ -1399,6 +1400,12 @@ app.get('/', async function(req, res) {
       session.setScanMode(req.query.scan_mode)
     }
 
+    var use_png_logos = session.data.use_png_logos ?? 'no'
+    if ( req.query.use_png_logos && (req.query.use_png_logos != session.data.use_png_logos) ) {
+      use_png_logos = req.query.use_png_logos
+      session.setScanMode(req.query.use_png_logos)
+    }
+
     var content_protect = ''
     var content_protect_a = ''
     var content_protect_b = ''
@@ -1420,7 +1427,7 @@ app.get('/', async function(req, res) {
     body += '</style><script type="text/javascript">' + "\n";
 
     // Define option variables in page
-    body += 'var date="' + gameDate + '";var level="' + level + '";var org="' + org + '";var mediaType="' + mediaType + '";var resolution="' + resolution + '";var audio_track="' + audio_track + '";var force_vod="' + force_vod + '";var inning_half="' + inning_half + '";var inning_number="' + inning_number + '";var skip="' + skip + '";var pad="' + pad + '";var linkType="' + linkType + '";var startFrom="' + startFrom + '";var scores="' + scores + '";var controls="' + controls + '";var scan_mode="' + scan_mode + '";var content_protect="' + content_protect + '";' + "\n"
+    body += 'var date="' + gameDate + '";var level="' + level + '";var org="' + org + '";var mediaType="' + mediaType + '";var resolution="' + resolution + '";var audio_track="' + audio_track + '";var force_vod="' + force_vod + '";var inning_half="' + inning_half + '";var inning_number="' + inning_number + '";var skip="' + skip + '";var pad="' + pad + '";var linkType="' + linkType + '";var startFrom="' + startFrom + '";var scores="' + scores + '";var controls="' + controls + '";var scan_mode="' + scan_mode + '";var use_png_logos="' + use_png_logos + '";var content_protect="' + content_protect + '";' + "\n"
 
     // Reload function, called after options change
     body += 'var defaultDate="' + today + '";var curDate=new Date();var utcHours=curDate.getUTCHours();if ((utcHours >= ' + todayUTCHours + ') && (utcHours < ' + YESTERDAY_UTC_HOURS + ')){defaultDate="' + yesterday + '"}function reload(){var newurl="/?";if (date != defaultDate){var urldate=date;if (date == "' + today + '"){urldate="today"}else if (date == "' + yesterday + '"){urldate="yesterday"}newurl+="date="+urldate+"&"}if (level != "' + default_level + '"){newurl+="level="+encodeURIComponent(level)+"&"}if (org != "All"){newurl+="org="+encodeURIComponent(org)+"&"}if (mediaType != "' + VALID_MEDIA_TYPES[0] + '"){newurl+="mediaType="+mediaType+"&"}if (mediaType=="Video"){if (resolution != "' + VALID_RESOLUTIONS[0] + '"){newurl+="resolution="+resolution+"&"}if (audio_track != "' + VALID_AUDIO_TRACKS[0] + '"){newurl+="audio_track="+encodeURIComponent(audio_track)+"&"}else if (resolution == "none"){newurl+="audio_track="+encodeURIComponent("' + VALID_AUDIO_TRACKS[2] + '")+"&"}if (inning_half != "' + VALID_INNING_HALF[0] + '"){newurl+="inning_half="+inning_half+"&"}if (inning_number != "' + VALID_INNING_NUMBER[0] + '"){newurl+="inning_number="+inning_number+"&"}if (skip != "' + VALID_SKIP[0] + '"){newurl+="skip="+skip+"&";}}if (pad != "' + VALID_PAD[0] + '"){newurl+="pad="+pad+"&";}if (linkType != "' + VALID_LINK_TYPES[0] + '"){newurl+="linkType="+linkType+"&"}if (linkType=="' + VALID_LINK_TYPES[0] + '"){if (startFrom != "' + VALID_START_FROM[0] + '"){newurl+="startFrom="+startFrom+"&"}if (controls != "' + VALID_CONTROLS[0] + '"){newurl+="controls="+controls+"&"}}if (linkType=="Stream"){if (force_vod != "' + VALID_FORCE_VOD[0] + '"){newurl+="force_vod="+force_vod+"&"}}if (scores != "' + VALID_SCORES[0] + '"){newurl+="scores="+scores+"&"}if (scan_mode != "' + session.data.scan_mode + '"){newurl+="scan_mode="+scan_mode+"&"}if (content_protect != ""){newurl+="content_protect="+content_protect+"&"}window.location=newurl.substring(0,newurl.length-1)}' + "\n"
@@ -2154,6 +2161,13 @@ app.get('/', async function(req, res) {
     }
     body += ' <span class="tinytext">(ON plays sample for all stream requests)</span></p>' + "\n"
 
+    body += `<p><span class="tooltip">Use PNG logos<span class="tooltiptext">Use PNG (rather than default SVG) logos</span></span>: `
+    for (var i = 0; i < VALID_USE_PNG_LOGOS_MODES.length; i++) {
+      body += '<button '
+      if ( use_png_logos == VALID_USE_PNG_LOGOS_MODES[i] ) body += 'class="default" '
+      body += `onclick="use_png_logos='${VALID_USE_PNG_LOGOS_MODES[i]}';reload()">${VALID_USE_PNG_LOGOS_MODES[i]}</button> `
+    }
+
     if ( !req.query.resolution ) {
       resolution = 'best'
     }
@@ -2601,7 +2615,7 @@ app.get('/guide.xml', async function(req, res) {
   res.end(body)
 })
 
-// Listen for image requests
+// Listen for SVG image requests
 app.get('/image.svg', async function(req, res) {
   if ( ! (await protect(req, res)) ) return
 
@@ -2615,6 +2629,23 @@ app.get('/image.svg', async function(req, res) {
   var body = await session.getImage(teamId)
 
   res.writeHead(200, {'Content-Type': 'image/svg+xml'})
+  res.end(body)
+})
+
+// Listen for PNG image requests
+app.get('/image.png', async function(req, res) {
+  if ( ! (await protect(req, res)) ) return
+
+  session.requestlog('image.png', req, true)
+
+  let teamId = 'MLB'
+  if ( req.query.teamId ) {
+    teamId = req.query.teamId
+  }
+
+  var body = await session.getImagePng(teamId)
+
+  res.writeHead(200, {'Content-Type': 'image/png'})
   res.end(body)
 })
 

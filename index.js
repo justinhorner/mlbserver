@@ -289,7 +289,6 @@ app.get('/stream.m3u8', async function(req, res) {
             streamURL = await session.getEventStreamURL(false, gamePk)
           }
         }
-
         if ( !streamURL ) {
           if ( req.query.contentId ) {
             contentId = req.query.contentId
@@ -334,14 +333,6 @@ app.get('/stream.m3u8', async function(req, res) {
               session.log('no matching game found ' + req.url)
             }
           }
-
-           // get default stream for team for today
-           if (!mediaId) {
-            let mediaInfo = await session.getMediaId(decodeURIComponent(req.query.team), 'MLB', 'Video', 'today')
-            if (mediaInfo) {
-              mediaId = mediaInfo.mediaId
-            }
-           }
 
           if ( !streamURL ) {
             if ( !mediaId ) {
